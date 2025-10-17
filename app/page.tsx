@@ -102,7 +102,7 @@ export default function RoyalResponseLanding() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white scroll-smooth">
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-black/95 backdrop-blur-sm border-b border-purple-900/30 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -132,6 +132,12 @@ export default function RoyalResponseLanding() {
                 Problem
               </a>
               <a
+                href="#why-us"
+                className="text-gray-300 hover:text-yellow-500 transition-colors"
+              >
+                Why Us?
+              </a>
+              <a
                 href="#features"
                 className="text-gray-300 hover:text-yellow-500 transition-colors"
               >
@@ -143,12 +149,7 @@ export default function RoyalResponseLanding() {
               >
                 ROI Calculator
               </a>
-              <a
-                href="#why-us"
-                className="text-gray-300 hover:text-yellow-500 transition-colors"
-              >
-                Why Us?
-              </a>
+
               <a
                 href="#demo"
                 className="text-gray-300 hover:text-yellow-500 transition-colors"
@@ -265,7 +266,10 @@ export default function RoyalResponseLanding() {
       </section>
 
       {/* The Problem */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-purple-950/30 to-black">
+      <section
+        id="problem"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-purple-950/30 to-black"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">
@@ -355,7 +359,7 @@ export default function RoyalResponseLanding() {
       </section>
 
       {/* Why Royal Response Agents */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-black">
+      <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 bg-black">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <Image
@@ -576,7 +580,7 @@ export default function RoyalResponseLanding() {
       </section>
 
       {/* Features */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">
