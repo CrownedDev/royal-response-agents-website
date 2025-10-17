@@ -1,5 +1,7 @@
 "use client";
+
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Phone, MessageSquare, Clock, TrendingUp, Shield, Zap, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export default function RoyalResponseLanding() {
@@ -34,9 +36,13 @@ export default function RoyalResponseLanding() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-purple-800 rounded-lg flex items-center justify-center">
-                <span className="text-yellow-500 text-2xl">👑</span>
-              </div>
+              <Image 
+                src="/images/logo.webp" 
+                alt="Royal Response Agents" 
+                width={48}
+                height={48}
+                className="w-12 h-12"
+              />
               <div>
                 <div className="text-xl font-bold text-yellow-500">ROYAL RESPONSE AGENTS</div>
                 <div className="text-xs text-purple-300">AT YOUR SERVICE</div>
@@ -102,7 +108,13 @@ export default function RoyalResponseLanding() {
               <div className="bg-gradient-to-br from-purple-900 to-purple-950 rounded-2xl p-8 border border-purple-700 shadow-2xl">
                 <div className="aspect-video bg-black rounded-lg flex items-center justify-center mb-6">
                   <div className="text-center">
-                    <Phone className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+                    <Image 
+                      src="/images/logo.webp" 
+                      alt="Royal Response Agents" 
+                      width={80}
+                      height={80}
+                      className="w-20 h-20 mx-auto mb-4 opacity-50"
+                    />
                     <div className="text-purple-300">Live Demo Embed</div>
                     <div className="text-sm text-gray-500 mt-2">Voiceflow integration here</div>
                   </div>
@@ -190,7 +202,13 @@ export default function RoyalResponseLanding() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-black">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <div className="text-6xl mb-4">👑</div>
+            <Image 
+              src="/images/logo.webp" 
+              alt="Royal Response Agents Shield" 
+              width={64}
+              height={64}
+              className="w-16 h-16 mx-auto mb-4"
+            />
             <h2 className="text-4xl font-bold mb-4">Why <span className="text-yellow-500">Royal Response Agents?</span></h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               We&apos;re not just another AI chatbot. We&apos;re your dedicated 24/7 virtual reception team — 
@@ -671,9 +689,13 @@ export default function RoyalResponseLanding() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-10 h-10 bg-purple-800 rounded-lg flex items-center justify-center">
-                  <span className="text-yellow-500 text-xl">👑</span>
-                </div>
+                <Image 
+                  src="/images/logo.webp" 
+                  alt="Royal Response Agents" 
+                  width={40}
+                  height={40}
+                  className="w-10 h-10"
+                />
                 <div>
                   <div className="font-bold text-yellow-500">ROYAL RESPONSE AGENTS</div>
                   <div className="text-xs text-purple-300">AT YOUR SERVICE</div>
