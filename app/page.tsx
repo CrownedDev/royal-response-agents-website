@@ -14,35 +14,6 @@ import {
 } from "lucide-react";
 
 // Add TypeScript declaration for Voiceflow
-declare global {
-  interface Window {
-    voiceflow?: {
-      chat?: {
-        load: (config: {
-          verify: { projectID: string };
-          url: string;
-          versionID: string;
-          autostart?: boolean;
-          render?: {
-            mode?: string;
-            position?: string;
-          };
-          launch?: {
-            event?: {
-              onOpen?: () => void;
-              onClose?: () => void;
-              onMessage?: (message: unknown) => void;
-            };
-          };
-        }) => void;
-        open: () => void;
-        close: () => void;
-        isOpen?: boolean;
-        interact?: (action: { type: string; payload: string }) => void;
-      };
-    };
-  }
-}
 
 // Helper function to convert to snake_case
 const toSnakeCase = (str: string) => {
@@ -138,6 +109,15 @@ export default function RoyalResponseLanding() {
         submitButton.disabled = true;
       }
 
+      const voiceflowProspectID =
+        localStorage.getItem("voiceflow_prospect_id") ||
+        window.voiceflowProspectID ||
+        null;
+
+      if (voiceflowProspectID) {
+        console.log("Submitting with Voiceflow ID:", voiceflowProspectID);
+      }
+
       // POST to your backend API
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/sales/capture-lead`,
@@ -147,6 +127,7 @@ export default function RoyalResponseLanding() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            voiceflow_prospect_id: voiceflowProspectID,
             name: formData.name,
             email: formData.email,
             phone: formData.phone,

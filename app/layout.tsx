@@ -41,11 +41,28 @@ export default function RootLayout({
         v.onload = function() {
           console.log('Loading Voiceflow V3 with Project ID: ${voiceflowProjectId}');
           
-          window.voiceflow.chat.load({
-            verify: { projectID: '${voiceflowProjectId}' },
-            url: 'https://general-runtime.voiceflow.com',
-            versionID: 'production'
+        window.voiceflow.chat.load({
+          verify: { projectID: '${voiceflowProjectId}' },
+          url: 'https://general-runtime.voiceflow.com',
+          versionID: 'production'
+        }).then(() => {
+          console.log('✅ Voiceflow V3 initialized');
+          
+          // Listen for when chat opens and capture user ID
+          window.voiceflow.chat.on('open', function() {
+            try {
+              const userID = window.voiceflow.chat.state?.user?.userID;
+              
+              if (userID) {
+                console.log('📋 Voiceflow User ID:', userID);
+                localStorage.setItem('voiceflow_prospect_id', userID);
+                window.voiceflowProspectID = userID;
+              }
+            } catch (error) {
+              console.error('Error capturing Voiceflow ID:', error);
+            }
           });
+        });
           
           console.log('✅ Voiceflow V3 initialized');
         };
