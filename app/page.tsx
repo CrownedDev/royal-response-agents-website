@@ -109,13 +109,13 @@ export default function RoyalResponseLanding() {
         submitButton.disabled = true;
       }
 
-      const voiceflowProspectID =
-        localStorage.getItem("voiceflow_prospect_id") ||
-        window.voiceflowProspectID ||
+      const voiceflowUserID =
+        localStorage.getItem("voiceflow_user_id") ||
+        window.voiceflowUserID ||
         null;
 
-      if (voiceflowProspectID) {
-        console.log("Submitting with Voiceflow ID:", voiceflowProspectID);
+      if (voiceflowUserID) {
+        console.log("Submitting with Voiceflow ID:", voiceflowUserID);
       }
 
       // POST to your backend API
@@ -127,7 +127,7 @@ export default function RoyalResponseLanding() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            voiceflow_prospect_id: voiceflowProspectID,
+            voiceflow_user_id: voiceflowUserID,
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
@@ -1168,7 +1168,7 @@ export default function RoyalResponseLanding() {
                   className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
                   required
                 >
-                  <option value="Any">Any</option>
+                  <option value="any">Any</option>
                   <option value="email">Email</option>
                   <option value="phone">Phone Call</option>
                   <option value="whatsapp">WhatsApp</option>

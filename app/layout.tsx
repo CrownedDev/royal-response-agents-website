@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+
 const voiceflowProjectId = process.env.NEXT_PUBLIC_VOICEFLOW_PROJECT_ID;
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -30,7 +32,7 @@ export default function RootLayout({
       >
         {children}
 
-        {/* Voiceflow Chat Widget - V3 */}
+        {/* Voiceflow Chat Widget - V3 SIMPLIFIED */}
         <Script
           id="voiceflow-widget"
           strategy="afterInteractive"
@@ -41,30 +43,13 @@ export default function RootLayout({
         v.onload = function() {
           console.log('Loading Voiceflow V3 with Project ID: ${voiceflowProjectId}');
           
-        window.voiceflow.chat.load({
-          verify: { projectID: '${voiceflowProjectId}' },
-          url: 'https://general-runtime.voiceflow.com',
-          versionID: 'production'
-        }).then(() => {
-          console.log('✅ Voiceflow V3 initialized');
-          
-          // Listen for when chat opens and capture user ID
-          window.voiceflow.chat.on('open', function() {
-            try {
-              const userID = window.voiceflow.chat.state?.user?.userID;
-              
-              if (userID) {
-                console.log('📋 Voiceflow User ID:', userID);
-                localStorage.setItem('voiceflow_prospect_id', userID);
-                window.voiceflowProspectID = userID;
-              }
-            } catch (error) {
-              console.error('Error capturing Voiceflow ID:', error);
-            }
+          window.voiceflow.chat.load({
+            verify: { projectID: '${voiceflowProjectId}' },
+            url: 'https://general-runtime.voiceflow.com',
+            versionID: 'production'
+          }).then(() => {
+            console.log('✅ Voiceflow V3 chat widget loaded successfully');
           });
-        });
-          
-          console.log('✅ Voiceflow V3 initialized');
         };
         v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs";
         v.type = "text/javascript";

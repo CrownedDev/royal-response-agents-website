@@ -29,5 +29,5 @@ interface Window {
       };
     };
   };
-  voiceflowProspectID?: string;
+  voiceflowUserID?: string;
 }
