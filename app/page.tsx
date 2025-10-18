@@ -44,22 +44,80 @@ declare global {
   }
 }
 
+// Helper function to convert to snake_case
+const toSnakeCase = (str: string) => {
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "_") // Replace spaces with underscores
+    .replace(/-+/g, "_"); // Replace hyphens with underscores
+};
+
 export default function RoyalResponseLanding() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
+    preferredContact: "",
     company: "",
     crm: "",
+    challenges: "",
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const [showCrmOther, setShowCrmOther] = useState(false);
+
+  const [roiData, setRoiData] = useState({
+    monthlyEnquiries: 100,
+    avgCommission: 4000,
+  });
+
+  const calculateROI = () => {
+    const { monthlyEnquiries, avgCommission } = roiData;
+
+    const afterHoursLost = Math.round(monthlyEnquiries * 0.4);
+    const viewingsPerMonth = Math.round(afterHoursLost * 0.15);
+    const annualSalesLost = Math.round(viewingsPerMonth * 12 * 0.1);
+    const commissionLost = annualSalesLost * avgCommission;
+    const systemMonthlyCost = 800;
+    const annualSystemCost = systemMonthlyCost * 12;
+    const netBenefit = commissionLost - annualSystemCost;
+    const roiPercentage = Math.round((netBenefit / annualSystemCost) * 100);
+    const monthlyLostRevenue = Math.round(commissionLost / 12);
+
+    return {
+      afterHoursLost,
+      monthlyLostRevenue,
+      annualLostRevenue: commissionLost,
+      systemMonthlyCost,
+      annualSystemCost,
+      netBenefit,
+      roiPercentage,
+      paybackMonths:
+        netBenefit > 0
+          ? Math.round((annualSystemCost / (commissionLost / 12)) * 10) / 10
+          : 0,
+    };
   };
 
-  const handleSubmit = () => {
+  const roi = calculateROI();
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate required fields
     if (
       !formData.name ||
       !formData.email ||
@@ -70,20 +128,92 @@ export default function RoyalResponseLanding() {
       return;
     }
 
-    // Open the chat widget instead of showing alert
-    if (window.voiceflow?.chat) {
-      window.voiceflow.chat.open();
+    try {
+      // Show loading state (need to cast properly)
+      const submitButton = document.querySelector(
+        'button[type="submit"]'
+      ) as HTMLButtonElement;
+      if (submitButton) {
+        submitButton.textContent = "Submitting...";
+        submitButton.disabled = true;
+      }
 
-      // Optional: Send their info to the chat
-      setTimeout(() => {
-        window.voiceflow?.chat?.interact?.({
-          type: "text",
-          payload: `Hi, I'm ${formData.name} from ${formData.company}. I'm interested in a demo.`,
+      // POST to your backend API
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/sales/capture-lead`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            preferred_contact: formData.preferredContact,
+            company: formData.company,
+            crm: toSnakeCase(formData.crm),
+            channel: "website_form",
+
+            challenges: formData.challenges,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Success! Show confirmation
+        alert(
+          `✅ Thank you ${
+            formData.name.split(" ")[0]
+          }! We'll contact you within 24 hours.\n\nLead Score: ${
+            data.lead_score
+          }/100`
+        );
+
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          preferredContact: "",
+          company: "",
+          crm: "",
+          challenges: "",
         });
-      }, 500);
-    } else {
-      // Fallback if chat not loaded yet
-      alert("Chat is loading, please try again in a moment");
+        setShowCrmOther(false);
+
+        // ✅ FIXED: Properly check if voiceflow exists
+        if (window.voiceflow?.chat?.open) {
+          setTimeout(() => {
+            window.voiceflow?.chat?.open();
+          }, 1000);
+        }
+      } else {
+        // Error from API
+        alert(
+          `❌ Error: ${data.error || "Failed to submit. Please try again."}`
+        );
+      }
+
+      // Restore button
+      if (submitButton) {
+        submitButton.textContent = "Book Your Demo";
+        submitButton.disabled = false;
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      alert("❌ Network error. Please check your connection and try again.");
+
+      // Restore button
+      const submitButton = document.querySelector(
+        'button[type="submit"]'
+      ) as HTMLButtonElement;
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = "Book Your Demo";
+      }
     }
   };
 
@@ -680,7 +810,7 @@ export default function RoyalResponseLanding() {
                 </li>
                 <li className="flex items-center space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-yellow-500" />
-                  <span>SMS/email reminders</span>
+                  <span>Text/email reminders</span>
                 </li>
               </ul>
             </div>
@@ -749,38 +879,66 @@ export default function RoyalResponseLanding() {
 
           <div className="bg-gradient-to-br from-purple-900/30 to-purple-950/30 border-2 border-purple-700 rounded-xl p-8">
             <div className="space-y-6">
+              {/* Input: Monthly Enquiries */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Monthly Property Enquiries
+                  Total Monthly Enquiries (Whole Office)
                 </label>
                 <input
-                  type="number"
-                  defaultValue="100"
-                  className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
+                  type="text"
+                  inputMode="numeric"
+                  value={roiData.monthlyEnquiries}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    setRoiData((prev) => ({
+                      ...prev,
+                      monthlyEnquiries: value === "" ? 0 : parseInt(value),
+                    }));
+                  }}
+                  className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500 text-lg"
                   placeholder="e.g., 100"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Total enquiries across all agents in your branch
+                </p>
               </div>
 
+              {/* Input: Average Commission */}
               <div>
                 <label className="block text-sm font-medium mb-2">
                   Average Commission per Sale (£)
                 </label>
                 <input
-                  type="number"
-                  defaultValue="4000"
-                  className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
+                  type="text"
+                  inputMode="numeric"
+                  value={roiData.avgCommission}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    setRoiData((prev) => ({
+                      ...prev,
+                      avgCommission: value === "" ? 0 : parseInt(value),
+                    }));
+                  }}
+                  className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500 text-lg"
                   placeholder="e.g., 4000"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Typical commission earned per property sale
+                </p>
               </div>
 
+              {/* Results */}
               <div className="border-t border-purple-700 pt-6 mt-6">
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 gap-6 mb-6">
                   <div className="bg-black rounded-lg p-6 border border-purple-700">
                     <div className="text-sm text-gray-400 mb-2">
                       Missed After-Hours Leads
                     </div>
                     <div className="text-3xl font-bold text-red-400">
-                      40 leads/month
+                      {roi.afterHoursLost} leads/month
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      40% of enquiries come after hours
                     </div>
                   </div>
                   <div className="bg-black rounded-lg p-6 border border-purple-700">
@@ -788,31 +946,110 @@ export default function RoyalResponseLanding() {
                       Lost Revenue (Monthly)
                     </div>
                     <div className="text-3xl font-bold text-red-400">
-                      £6,000
+                      £{roi.monthlyLostRevenue.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      £{roi.annualLostRevenue.toLocaleString()} per year
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border-2 border-yellow-500 rounded-lg p-6">
-                  <div className="flex justify-between items-center">
+                {/* ROI Highlight */}
+                <div className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border-2 border-yellow-500 rounded-lg p-6">
+                  {/* Top Summary Row */}
+                  <div className="flex justify-between items-center mb-6 pb-6 border-b border-yellow-500/30">
                     <div>
                       <div className="text-sm text-gray-300 mb-1">
-                        With Royal Response
+                        Your ROI with Royal Response
                       </div>
                       <div className="text-4xl font-bold text-yellow-500">
-                        +£6,000/month
+                        {roi.roiPercentage}%
                       </div>
-                      <div className="text-sm text-gray-300 mt-1">
-                        Cost: £800/month
+                      <div className="text-sm text-gray-400 mt-1">
+                        Payback in {roi.paybackMonths} months
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-5xl font-bold text-yellow-500">
-                        7.5x
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400 mb-1">
+                        Net Annual Benefit
                       </div>
-                      <div className="text-sm text-gray-300">ROI</div>
+                      <div className="text-2xl font-bold text-green-400">
+                        £{roi.netBenefit.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        After £{roi.systemMonthlyCost}/month system cost
+                      </div>
                     </div>
                   </div>
+
+                  {/* Calculation Breakdown */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-semibold text-yellow-500 mb-3">
+                      Here&apos;s How We Calculate This:
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-300">
+                        After-hours leads × 15% viewing rate × 12 months × 10%
+                        sale rate
+                      </span>
+                      <span className="text-white font-mono">
+                        {roi.afterHoursLost} × 15% × 12 × 10%
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-300">
+                        = Annual sales captured
+                      </span>
+                      <span className="text-white font-mono">
+                        {Math.round(roi.afterHoursLost * 0.15 * 12 * 0.1)} sales
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-300">
+                        × Average commission £
+                        {roiData.avgCommission.toLocaleString()}
+                      </span>
+                      <span className="text-green-400 font-mono font-bold">
+                        £{roi.annualLostRevenue.toLocaleString()}/year
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm pt-2 border-t border-yellow-500/30">
+                      <span className="text-gray-300">
+                        Less: Annual system cost (£{roi.systemMonthlyCost}/month
+                        × 12)
+                      </span>
+                      <span className="text-red-400 font-mono">
+                        -£{roi.annualSystemCost.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-base pt-3 border-t border-yellow-500/50">
+                      <span className="text-white font-semibold">
+                        Your Net Benefit
+                      </span>
+                      <span className="text-green-400 font-mono text-xl font-bold">
+                        £{roi.netBenefit.toLocaleString()}/year
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Call to Action */}
+                <div className="mt-6 text-center">
+                  <a
+                    href="#demo"
+                    className="inline-block bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-8 py-4 rounded-lg font-bold text-lg hover:from-yellow-400 hover:to-yellow-500 transition-all"
+                  >
+                    See It in Action - Book Demo
+                  </a>
+                  <p className="text-sm text-gray-400 mt-3">
+                    Join {Math.floor(roi.monthlyLostRevenue / 800)} other
+                    agencies already capturing these missed leads
+                  </p>
                 </div>
               </div>
             </div>
@@ -901,6 +1138,20 @@ export default function RoyalResponseLanding() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium mb-2">
+                  Agency Name
+                </label>
+                <input
+                  type="text"
+                  name="company"
+                  value={formData.company}
+                  onChange={handleChange}
+                  className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
+                  placeholder="Your Estate Agency"
+                />
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium mb-2">Email</label>
                 <input
                   type="email"
@@ -924,43 +1175,98 @@ export default function RoyalResponseLanding() {
                 />
               </div>
 
+              {/* ⭐ ADD THIS - Preferred Contact Method */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Agency Name
+                  Preferred Contact Method
                 </label>
-                <input
-                  type="text"
-                  name="company"
-                  value={formData.company}
+                <select
+                  name="preferredContact"
+                  value={formData.preferredContact}
                   onChange={handleChange}
                   className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
-                  placeholder="Your Estate Agency"
-                />
+                  required
+                >
+                  <option value="Any">Any</option>
+                  <option value="email">Email</option>
+                  <option value="phone">Phone Call</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="text">Text</option>
+                </select>
               </div>
 
+              {/* Which CRM do you use? */}
+              {/* Which CRM do you use? */}
               <div>
                 <label className="block text-sm font-medium mb-2">
                   Which CRM do you use?
                 </label>
-                <select
-                  name="crm"
-                  value={formData.crm}
+
+                {!showCrmOther ? (
+                  <select
+                    name="crm"
+                    value={formData.crm}
+                    onChange={(e) => {
+                      if (e.target.value === "other") {
+                        setShowCrmOther(true);
+                        setFormData((prev) => ({ ...prev, crm: "" }));
+                      } else {
+                        handleChange(e);
+                      }
+                    }}
+                    className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
+                    required
+                  >
+                    <option value="none">None</option>
+                    <option value="reapit">Reapit</option>
+                    <option value="alto">Alto</option>
+                    <option value="jupix">Jupix</option>
+                    <option value="expert_agent">Expert Agent</option>
+                    <option value="realla">Realla</option>
+                    <option value="other">Other</option>
+                  </select>
+                ) : (
+                  <div>
+                    <input
+                      type="text"
+                      name="crm"
+                      value={formData.crm}
+                      onChange={handleChange}
+                      placeholder="e.g., Dezrez, Property Cloud, etc."
+                      className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCrmOther(false);
+                        setFormData((prev) => ({ ...prev, crm: "" }));
+                      }}
+                      className="mt-2 text-sm text-purple-400 hover:text-purple-300"
+                    >
+                      ← Back to dropdown
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  What challenges are you hoping to solve? (Optional)
+                </label>
+                <textarea
+                  name="challenges"
+                  value={formData.challenges}
                   onChange={handleChange}
-                  className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
-                >
-                  <option value="">Select your CRM</option>
-                  <option value="reapit">Reapit</option>
-                  <option value="alto">Alto</option>
-                  <option value="jupix">Jupix</option>
-                  <option value="expert-agent">Expert Agent</option>
-                  <option value="other">Other</option>
-                  <option value="none">No CRM yet</option>
-                </select>
+                  rows={4}
+                  placeholder="E.g., Missing after-hours calls, slow response times, need better lead qualification..."
+                  className="w-full bg-black border border-purple-700 rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500 resize-none"
+                />
               </div>
 
               <button
                 onClick={handleSubmit}
-                className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg hover:from-yellow-400 hover:to-yellow-500 transition-all"
+                type="submit" // Changed from "button" to "submit"
+                className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg hover:from-yellow-400 hover:to-yellow-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Book Your Demo
               </button>
@@ -1079,7 +1385,7 @@ export default function RoyalResponseLanding() {
           </div>
 
           <div className="border-t border-purple-900/30 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 Royal Response Agents. All rights reserved.</p>
+            <p>&copy; 2025 Royal Response Agents. All rights reserved.</p>
           </div>
         </div>
       </footer>

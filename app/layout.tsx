@@ -30,7 +30,7 @@ export default function RootLayout({
       >
         {children}
 
-        {/* Voiceflow Chat Widget */}
+        {/* Voiceflow Chat Widget - V3 */}
         <Script
           id="voiceflow-widget"
           strategy="afterInteractive"
@@ -39,25 +39,17 @@ export default function RootLayout({
       (function(d, t) {
         var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function() {
-          console.log('Loading Voiceflow with Project ID: ${voiceflowProjectId}');
+          console.log('Loading Voiceflow V3 with Project ID: ${voiceflowProjectId}');
           
-          // Fixed configuration format
-          if (window.voiceflow && window.voiceflow.chat) {
-            window.voiceflow.chat.load({
-              verify: { projectID: '${voiceflowProjectId}' },
-              url: 'https://general-runtime.voiceflow.com',
-              versionID: 'production',
-              // Remove or fix these optional configs that might be causing issues
-              autostart: false
-              // Removed render and launch configs that might have wrong format
-            });
-            console.log('✅ Voiceflow initialized');
-            
-            // Make sure it's available globally for buttons
-            window.voiceflowChat = window.voiceflow.chat;
-          }
-        }
-        v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
+          window.voiceflow.chat.load({
+            verify: { projectID: '${voiceflowProjectId}' },
+            url: 'https://general-runtime.voiceflow.com',
+            versionID: 'production'
+          });
+          
+          console.log('✅ Voiceflow V3 initialized');
+        };
+        v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs";
         v.type = "text/javascript";
         s.parentNode.insertBefore(v, s);
       })(document, 'script');
